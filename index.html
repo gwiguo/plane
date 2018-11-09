@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>热狗大战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            overflow: hidden;
+            height: 100%;
+            background-color: #000;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        #wrap {
+            overflow: hidden;
+            position: relative;
+            left: 30%;
+            width: 600px;
+            height: 100%;
+            background-image: url('./img/bg_1.jpg');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        /* 游戏难度选择 */
+        #gameSelect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            color: red;
+            text-align: center;
+        }
+
+        #gameSelect>ul {
+            margin-top: 100px;
+        }
+
+        h1 {
+            height: 50px;
+            padding-bottom: 100px;
+            line-height: 50px;
+        }
+
+        #gameSelect ul li {
+            width: 150px;
+            height: 50px;
+            margin: 10px 0;
+            line-height: 50px;
+            font-size: 32px;
+            cursor: pointer;
+        }
+
+        #gameSelect ul li:hover {
+            color: #FFF;
+        }
+
+        #logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background-image: url('./img/regou.gif');
+            background-size: 100% 100%;
+        }
+
+        /* 游戏结束 */
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 300px;
+            color: #FFF;
+            font-size: 32px;
+            line-height: 50px;
+            padding-top: 100px;
+            text-align: center;
+
+        }
+
+        #score {
+            color: #f00;
+        }
+
+        /* 游戏开始 */
+        #gameStart {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 我方王思聪 */
+        #myplane {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 999;
+        }
+        /* 敌方飞机 */
+        .enemy{
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div id="wrap">
+        <!-- 选择难度 -->
+        <div id="gameSelect">
+            <h1>热狗大战</h1>
+            <div id="logo"></div>
+            <ul>
+                <li>很少热狗</li>
+                <li>正常热狗</li>
+                <li>好多热狗</li>
+                <li>超多热狗</li>
+            </ul>
+        </div>
+        <!-- 开始游戏 -->
+        <div id="gameStart">
+
+        </div>
+        <!-- 游戏结束 -->
+        <div id="gameOver">
+            <p>游戏结束！</p>
+            您的积分是：<p id="score">100000</p>
+        </div>
+    </div>
+
+
+
+</body>
+
+<script>
+
+    ; (function () {
+        [...document.querySelectorAll("#gameSelect li")].forEach(function (item, index) {
+            item.addEventListener('click', function (e) {
+                // index 表示点击的是哪个难度  
+                new Plane(e, index);
+
+            }, false);
+        });
+
+
+        function Plane(e, index) {
+
+            this.wrap = document.getElementById("wrap"),
+            this.gameStart = document.getElementById("gameStart"),
+            this.gameSelect = document.getElementById("gameSelect"),
+            this.gameOver = document.getElementById('gameOver');
+            this.enemyPlanes = document.getElementsByClassName("enemy");
+            this.init(e,index);
+        }
+
+        Plane.prototype = {
+            init(e,index) {
+                this.showGameBox(); //隐藏选择难度的界面，显示游戏开始界面
+                this.myPlane(e); // 创建我方王思聪
+                this.myPlaneMove(); // 我方王思聪移动
+                this.enemyPlane(index);  // 创建敌方飞机
+            },
+            showGameBox(){
+                this.gameSelect.style.display = 'none';
+                this.gameStart.style.display = 'block';
+            },
+            myPlane(e) {
+                this.myplane = new Image();
+                this.myplane.setAttribute('id', 'myplane');
+                this.myplane.src = './img/myplane.png';
+                this.myplane.width = 60;
+                this.myplane.height = 60;
+                this.myplane.style.left = e.x - (this.wrap.offsetLeft + this.myplane.width / 2) + 'px';
+                this.myplane.style.top = e.y - (this.myplane.height / 2) + 'px';
+                this.gameStart.appendChild(this.myplane);
+            },
+            myPlaneMove() {
+                this.myplane = document.getElementById('myplane');
+                window.onmousemove = function (e) {
+                    this.nowLeft = e.x - (this.wrap.offsetLeft + myplane.width / 2);
+                    this.nowTop = e.y - (this.myplane.height / 2);
+                    this.maxLeft = this.wrap.offsetWidth - this.myplane.width;
+                    this.minLeft = 0;
+                    this.maxTop = this.wrap.offsetHeight - this.myplane.offsetHeight;
+                    this.minTop = 0;
+
+                    if (this.nowLeft < this.minLeft) {
+                        this.nowLeft = this.minLeft
+                    }
+                    if (this.nowLeft > this.maxLeft) {
+                        this.nowLeft = this.maxLeft;
+                    }
+                    if (this.nowTop < minTop) {
+                        this.nowTop = minTop;
+                    }
+                    if(this.nowTop > maxTop){
+                        this.nowTop = maxTop;
+                    }
+                    this.myplane.style.left = this.nowLeft + 'px';
+                    this.myplane.style.top = this.nowTop + 'px';
+                }
+            },
+            enemyPlane(index){
+                this.time = [300,200,100,50][index];
+                this.enemy = new Image(); //第一架敌方飞机
+                this.enemy.setAttribute('class', 'enemy');
+                this.enemy.src = './img/enemy_small.png';
+                this.enemy.width = 60;
+                this.enemy.height = 60;
+                this.enemy.style.left = this.createRandom(-this.enemy.width/2,this.wrap.offsetWidth) + 'px';
+                this.enemy.style.top =  0 + 'px';
+                this.gameStart.appendChild(this.enemy);
+                this.that = this;
+                setInterval(function () {
+                    this.clonePlane(this.enemy)
+                }.bind(this),500);
+
+
+            },
+            clonePlane(node){
+                this.cloneEnemy = node.cloneNode(); //克隆机
+                this.cloneEnemy.style.left = this.createRandom(-this.cloneEnemy.width,this.wrap.offsetWidth) + 'px';
+                this.gameStart.appendChild(this.cloneEnemy);
+                this.speed = this.createRandom(2,8);
+                this.enemyMove(this.cloneEnemy,this.speed); //克隆机移动
+            },
+            enemyMove(enemy,speed){
+                let nowTop = enemy.offsetTop;
+                    nowTop += speed;
+                console.log(nowTop)
+                // enemy.style.top = 
+                // this.enemyTop = enemy.offsetTop + speed;
+                // enemy.style.top = this.enemyTop + 'px';
+
+                requestAnimationFrame(()=>this.enemyMove(enemy,speed));
+            },
+            createRandom(min,max){
+                return Math.floor(Math.random()*(max-min+1)+min);
+            }
+        }
+
+
+
+    }())
+
+
+
+
+
+</script>
+
+
+</html>
