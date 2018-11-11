@@ -111,8 +111,9 @@
             left: 0;
             z-index: 999;
         }
+
         /* 敌方飞机 */
-        .enemy{
+        .enemy {
             position: absolute;
             top: 0;
             left: 0;
@@ -164,26 +165,28 @@
 
         function Plane(e, index) {
 
-            this.wrap = document.getElementById("wrap"),
-            this.gameStart = document.getElementById("gameStart"),
-            this.gameSelect = document.getElementById("gameSelect"),
-            this.gameOver = document.getElementById('gameOver');
-            this.enemyPlanes = document.getElementsByClassName("enemy");
-            this.init(e,index);
+            this.init(e, index);
         }
 
         Plane.prototype = {
-            init(e,index) {
+            init(e, index) {
+                this.wrap = document.getElementById("wrap"),
+                this.gameStart = document.getElementById("gameStart"),
+                this.gameSelect = document.getElementById("gameSelect"),
+                this.gameOver = document.getElementById('gameOver');
+                this.myplane = document.getElementById('myplane');
+                this.enemyPlanes = document.getElementsByClassName("enemy");
+
                 this.showGameBox(); //隐藏选择难度的界面，显示游戏开始界面
-                this.myPlane(e); // 创建我方王思聪
+                this.createMyPlane(e); // 创建我方王思聪
                 this.myPlaneMove(); // 我方王思聪移动
-                this.enemyPlane(index);  // 创建敌方飞机
+                this.createEnemyPlane(index);  // 创建敌方飞机
             },
-            showGameBox(){
+            showGameBox() {
                 this.gameSelect.style.display = 'none';
                 this.gameStart.style.display = 'block';
             },
-            myPlane(e) {
+            createMyPlane(e) {
                 this.myplane = new Image();
                 this.myplane.setAttribute('id', 'myplane');
                 this.myplane.src = './img/myplane.png';
@@ -194,67 +197,64 @@
                 this.gameStart.appendChild(this.myplane);
             },
             myPlaneMove() {
-                this.myplane = document.getElementById('myplane');
+                let that = this;
                 window.onmousemove = function (e) {
-                    this.nowLeft = e.x - (this.wrap.offsetLeft + myplane.width / 2);
-                    this.nowTop = e.y - (this.myplane.height / 2);
-                    this.maxLeft = this.wrap.offsetWidth - this.myplane.width;
-                    this.minLeft = 0;
-                    this.maxTop = this.wrap.offsetHeight - this.myplane.offsetHeight;
-                    this.minTop = 0;
+                    that.nowLeft = e.x - (that.wrap.offsetLeft + that.myplane.width / 2);
+                    that.nowTop = e.y - (that.myplane.height / 2);
+                    that.maxLeft = that.wrap.offsetWidth - that.myplane.width;
+                    that.minLeft = 0;
+                    that.maxTop = that.wrap.offsetHeight - that.myplane.offsetHeight;
+                    that.minTop = 0;
 
-                    if (this.nowLeft < this.minLeft) {
-                        this.nowLeft = this.minLeft
+                    // that.nowLeft = Math.max(that.maxLeft,that.nowLeft);
+                    // that.nowLeft = Math.min(that.minLeft,that.nowLeft);
+                    // that.nowTop = Math.max(that.maxTop,that.nowTop);
+                    // that.nowTop = Math.min(that.minTop,that.nowTop);
+                    if (that.nowLeft < that.minLeft) {
+                        that.nowLeft = that.minLeft
                     }
-                    if (this.nowLeft > this.maxLeft) {
-                        this.nowLeft = this.maxLeft;
+                    if (that.nowLeft > that.maxLeft) {
+                        that.nowLeft = that.maxLeft;
                     }
-                    if (this.nowTop < minTop) {
-                        this.nowTop = minTop;
+                    if (that.nowTop < that.minTop) {
+                        that.nowTop = that.minTop;
                     }
-                    if(this.nowTop > maxTop){
-                        this.nowTop = maxTop;
+                    if (that.nowTop > that.maxTop) {
+                        that.nowTop = that.maxTop;
                     }
-                    this.myplane.style.left = this.nowLeft + 'px';
-                    this.myplane.style.top = this.nowTop + 'px';
+                    that.myplane.style.left = that.nowLeft + 'px';
+                    that.myplane.style.top = that.nowTop + 'px';
                 }
             },
-            enemyPlane(index){
-                this.time = [300,200,100,50][index];
-                this.enemy = new Image(); //第一架敌方飞机
-                this.enemy.setAttribute('class', 'enemy');
-                this.enemy.src = './img/enemy_small.png';
-                this.enemy.width = 60;
-                this.enemy.height = 60;
-                this.enemy.style.left = this.createRandom(-this.enemy.width/2,this.wrap.offsetWidth) + 'px';
-                this.enemy.style.top =  0 + 'px';
-                this.gameStart.appendChild(this.enemy);
-                this.that = this;
+            createEnemyPlane(index) {
+                this.time = [300, 200, 100, 50][index];
+                
                 setInterval(function () {
-                    this.clonePlane(this.enemy)
-                }.bind(this),500);
-
+                    this.enemy = new Image(); //第一架敌方飞机
+                    this.enemy.setAttribute('class', 'enemy');
+                    this.enemy.src = './img/enemy_small.png';
+                    this.enemy.width = 60;
+                    this.enemy.height = 60;
+                    this.enemy.style.left = this.createRandom(-this.enemy.width / 2, this.wrap.offsetWidth - this.enemy.width / 2) + 'px';//敌机左右最大活动范围
+                    this.enemy.style.top = - 100 + 'px';
+                    this.gameStart.appendChild(this.enemy);
+                    this.speed = this.createRandom(2, 5); // 敌机随机下落速度
+                    this.enemyMove(this.enemy, this.speed); 
+                }.bind(this),this.time);
 
             },
-            clonePlane(node){
-                this.cloneEnemy = node.cloneNode(); //克隆机
-                this.cloneEnemy.style.left = this.createRandom(-this.cloneEnemy.width,this.wrap.offsetWidth) + 'px';
-                this.gameStart.appendChild(this.cloneEnemy);
-                this.speed = this.createRandom(2,8);
-                this.enemyMove(this.cloneEnemy,this.speed); //克隆机移动
-            },
-            enemyMove(enemy,speed){
+            enemyMove(enemy, speed) {
                 let nowTop = enemy.offsetTop;
-                    nowTop += speed;
-                console.log(nowTop)
-                // enemy.style.top = 
-                // this.enemyTop = enemy.offsetTop + speed;
-                // enemy.style.top = this.enemyTop + 'px';
-
-                requestAnimationFrame(()=>this.enemyMove(enemy,speed));
+                nowTop += speed;
+                enemy.style.top = nowTop + 'px';
+                if (enemy.offsetTop > this.maxTop) {
+                    enemy.remove()
+                } else {
+                    requestAnimationFrame(this.enemyMove.bind(this, enemy, speed));
+                }
             },
-            createRandom(min,max){
-                return Math.floor(Math.random()*(max-min+1)+min);
+            createRandom(min, max) {
+                return Math.floor(Math.random() * (max - min + 1) + min);
             }
         }
 
