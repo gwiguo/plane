@@ -111,6 +111,11 @@
             left: 0;
             z-index: 999;
         }
+        .bullet{
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
 
         /* 敌方飞机 */
         .enemy {
@@ -180,7 +185,8 @@
                 this.showGameBox(); //隐藏选择难度的界面，显示游戏开始界面
                 this.createMyPlane(e); // 创建我方王思聪
                 this.myPlaneMove(); // 我方王思聪移动
-                this.createEnemyPlane(index);  // 创建敌方飞机
+                this.fire(index); // 开火
+                this.createEnemyPlane(index);  // 创建敌方飞机并下落
             },
             showGameBox() {
                 this.gameSelect.style.display = 'none';
@@ -206,10 +212,6 @@
                     that.maxTop = that.wrap.offsetHeight - that.myplane.offsetHeight;
                     that.minTop = 0;
 
-                    // that.nowLeft = Math.max(that.maxLeft,that.nowLeft);
-                    // that.nowLeft = Math.min(that.minLeft,that.nowLeft);
-                    // that.nowTop = Math.max(that.maxTop,that.nowTop);
-                    // that.nowTop = Math.min(that.minTop,that.nowTop);
                     if (that.nowLeft < that.minLeft) {
                         that.nowLeft = that.minLeft
                     }
@@ -225,6 +227,27 @@
                     that.myplane.style.left = that.nowLeft + 'px';
                     that.myplane.style.top = that.nowTop + 'px';
                 }
+            },
+            fire(index){
+                this.fireSpeed = [500,300,200,50][index];
+                // setInterval(function () {
+                    this.bullet = new Image();
+                    this.bullet.className = 'bullet';
+                    this.bullet.src = './img/hotDog.png';
+                    this.bullet.width = 60 ;
+                    this.bullet.height = 80 ;
+                    this.bullet.style.top = this.myplane.offsetTop - this.myplane.offsetHeight + "px";
+                    this.bullet.style.left = this.myplane.offsetLeft + "px";
+                    this.gameStart.appendChild(this.bullet);
+                    function move() {
+                    console.log(this.bullet.offsetTop)
+                        let nowTop = this.bullet.offsetTop;
+                        nowTop -= 5;
+                        this.bullet.style.top = nowTop + 'px';
+                        requestAnimationFrame(move.bind(this))
+                    }
+                    move.call(this);
+                // }.bind(this),this.fireSpeed)
             },
             createEnemyPlane(index) {
                 this.time = [300, 200, 100, 50][index];
