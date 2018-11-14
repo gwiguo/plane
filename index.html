@@ -119,7 +119,7 @@
         }
 
         /* 敌方飞机 */
-        .enemy {
+        .enemy , .boom{
             position: absolute;
             top: 0;
             left: 0;
@@ -236,7 +236,7 @@
                 }.bind(this)
             },
             fire(speed) {
-                // setInterval(function () {
+                setInterval(function () {
                     let bullet = new Image();
                     bullet.className = 'bullet';
                     bullet.src = './img/hotDog.png';
@@ -258,22 +258,22 @@
                         // }
 
                             
-                        
+                            this.isCollision(document.getElementsByClassName('enemy'),bullet)
                        
 
                         if (bullet.offsetTop <= -bullet.offsetHeight) {
                             bullet.remove();
-                        } else {
+                        } else{
                                 requestAnimationFrame(move.bind(this));
                             }
                         
                     }
                     move.call(this);
-                // }.bind(this), this.fireSpeed)
+                }.bind(this), this.fireSpeed)
             },
             createEnemyPlane(speed) {
 
-                setTimeout(function () {
+                setInterval(function () {
                     this.enemy = new Image(); //第一架敌方飞机
                     this.enemy.setAttribute('class', 'enemy');
                     this.enemy.src = './img/enemy_small.png';
@@ -300,36 +300,42 @@
             createRandom(min, max) {
                 return Math.floor(Math.random() * (max - min + 1) + min);
             },
-            isCollision(enemys, ele2) {
-                [...enemys].forEach(function (item) {
-                    // console.log(ele2)
-                    var L1 = item.offsetLeft,
-                        U1 = item.offsetTop,
-                        R1 = item.offsetLeft + item.offsetWidth,
-                        B1 = item.offsetTop + item.offsetWidth,
+            isCollision(enemys, bullet) {
+                [...enemys].forEach(function (enemy) {
+                    var L1 = enemy.offsetLeft,
+                        U1 = enemy.offsetTop,
+                        R1 = enemy.offsetLeft + enemy.offsetWidth,
+                        B1 = enemy.offsetTop + enemy.offsetWidth,
 
-                        L2 = ele2.offsetLeft,
-                        U2 = ele2.offsetTop,
-                        R2 = ele2.offsetLeft + ele2.offsetWidth,
-                        B2 = ele2.offsetTop + ele2.offsetHeight;                                
+                        L2 = bullet.offsetLeft,
+                        U2 = bullet.offsetTop,
+                        R2 = bullet.offsetLeft + bullet.offsetWidth,
+                        B2 = bullet.offsetTop + bullet.offsetHeight;                                
 
                     if (R1 >= L2 && B1 >= U2 && L1 <= R2 && U1 <= B2) {
-                        console.log('true')
-                        return true;
-                    } else {
-                        console.log("false")
-                        return false;
+                        enemy.remove();
+                        this.boom(enemy);
                     }
 
                 }.bind(this))
 
 
             },
-            checkCollision(enemys,bullet,move) {
+            boom(enemy){
+                let boom = new Image();
+                    boom.src = './img/boom_small.png';
+                    boom.className = 'boom';
+                    boom.width = 60;
+                    boom.height = 60;
+                    boom.style.left = enemy.offsetLeft + 'px';
+                    boom.style.top = enemy.offsetTop + 'px';
+                    // console.log(enemy.offsetLeft)
+                    this.gameStart.appendChild(boom);                
+            },
+            checkCollision(enemys,bullet) {
                 // let flag = false;
                 [...enemys].forEach(function (item) {
                     if(this.isCollision(item,bullet)){
-                        // window.cancelAnimationFrame(move.bind(this))
                         // bullet.remove()
                         console.log(666)
                         // return true;
