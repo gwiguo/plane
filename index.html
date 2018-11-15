@@ -119,7 +119,8 @@
         }
 
         /* 敌方飞机 */
-        .enemy , .boom{
+        .enemy,
+        .boom {
             position: absolute;
             top: 0;
             left: 0;
@@ -149,7 +150,7 @@
         <!-- 游戏结束 -->
         <div id="gameOver">
             <p>游戏结束！</p>
-            您的积分是：<p id="score">100000</p>
+            您的积分是：<p id="score"></p>
         </div>
     </div>
 
@@ -180,12 +181,13 @@
                 this.gameStart = document.getElementById("gameStart"),
                 this.gameSelect = document.getElementById("gameSelect"),
                 this.gameOver = document.getElementById('gameOver');
+                this.scoreBox = document.getElementById("score"),
                 this.myplane = document.getElementById('myplane');
                 this.enemyPlanes = document.getElementsByClassName("enemy")[0];
                 this.bullet = document.getElementsByClassName("bullet");
                 this.fireSpeed = [400, 300, 200, 100][index]; //开火速度
                 this.time = [400, 300, 200, 100][index]; //敌机生成速度
-
+                this.score = 0;
                 this.showGameBox(); //隐藏选择难度的界面，显示游戏开始界面
                 this.createMyPlane(e); // 创建我方王思聪
                 this.myPlaneMove(); // 我方王思聪移动
@@ -195,6 +197,10 @@
             showGameBox() {
                 this.gameSelect.style.display = 'none';
                 this.gameStart.style.display = 'block';
+            },
+            showGameOver(){
+                this.scoreBox.innerText = this.score;
+                this.gameOver.style.display = 'block';
             },
             createMyPlane(e) {
                 this.myplane = new Image();
@@ -230,13 +236,10 @@
                     }
                     that.myplane.style.left = that.nowLeft + 'px';
                     that.myplane.style.top = that.nowTop + 'px';
-                    // this.isCollision(this.enemyPlanes,this)
-                    // this.isCollision(document.getElementsByClassName("enemy"),document.getElementById("myplane"))
-                    // console.log()
                 }.bind(this)
             },
             fire(speed) {
-                setInterval(function () {
+               fireTimer =  setInterval(function () {
                     let bullet = new Image();
                     bullet.className = 'bullet';
                     bullet.src = './img/hotDog.png';
@@ -250,97 +253,109 @@
                         let nowTop = bullet.offsetTop;
                         nowTop -= 10;
                         bullet.style.top = nowTop + 'px';
-                        // console.log(bullet)
-                        // if(this.checkCollision(this.enemyPlanes,bullet)){ //撞上了
-                            // console.log("撞上了！！！")
-                            // bullet.remove()
-                            // cancelAnimationFrame(move.bind(this))
-                        // }
 
-                            
-                            this.isCollision(document.getElementsByClassName('enemy'),bullet)
-                       
+                        // 碰撞检测
+                        this.isCollision(document.getElementsByClassName('enemy'), bullet)
 
-                        if (bullet.offsetTop <= -bullet.offsetHeight) {
+
+                        if (bullet.offsetTop <= -bullet.offsetHeight) { //子弹超过屏幕高度后移除
                             bullet.remove();
-                        } else{
-                                requestAnimationFrame(move.bind(this));
-                            }
-                        
+                        } else {
+                            requestAnimationFrame(move.bind(this));
+                        }
+
                     }
                     move.call(this);
                 }.bind(this), this.fireSpeed)
             },
             createEnemyPlane(speed) {
-
-                setInterval(function () {
-                    this.enemy = new Image(); //第一架敌方飞机
-                    this.enemy.setAttribute('class', 'enemy');
-                    this.enemy.src = './img/enemy_small.png';
-                    this.enemy.width = 60;
-                    this.enemy.height = 60;
+                let num = 0;
+                createEnemyTimer  = setInterval(function () {
+                    let  smallOrBig = ++num % 5; 
+                    this.enemy = new Image(); 
+                    if(smallOrBig) this.enemy.classList.add("small");
+                    else  this.enemy.classList.add("big");
+                    this.enemy.classList.add('enemy');
+                    this.enemy.src = smallOrBig ?'./img/enemy_small.png':'./img/enemy_big.png';
+                    this.enemy.width = smallOrBig ? 60 : 200;
+                    this.enemy.height = smallOrBig ? 60 : 160;
                     this.enemy.style.left = this.createRandom(-this.enemy.width / 2, this.wrap.offsetWidth - this.enemy.width / 2) + 'px';//敌机左右最大活动范围
                     this.enemy.style.top = - 100 + 'px';
                     this.gameStart.appendChild(this.enemy);
                     this.speed = this.createRandom(2, 5); // 敌机随机下落速度
                     this.enemyMove(this.enemy, this.speed);
                 }.bind(this), this.time);
-                
+
             },
             enemyMove(enemy, speed) {
+                if(document.getElementById('myplane')){ //王思聪存在的话才调用检测碰撞
+                    this.isCollision(enemy,myplane); 
+                }
                 let nowTop = enemy.offsetTop;
                 nowTop += speed;
                 enemy.style.top = nowTop + 'px';
                 if (enemy.offsetTop > this.maxTop) {
                     enemy.remove()
-                } else {               
+                } else {
                     requestAnimationFrame(this.enemyMove.bind(this, enemy, speed));
                 }
-            },
+            },            
             createRandom(min, max) {
                 return Math.floor(Math.random() * (max - min + 1) + min);
             },
-            isCollision(enemys, bullet) {
-                [...enemys].forEach(function (enemy) {
-                    var L1 = enemy.offsetLeft,
+            isCollision(enemys, ele) {
+                if(enemys.length>0){
+                    [...enemys].forEach(function (enemy) {
+                    let L1 = enemy.offsetLeft,
                         U1 = enemy.offsetTop,
                         R1 = enemy.offsetLeft + enemy.offsetWidth,
                         B1 = enemy.offsetTop + enemy.offsetWidth,
 
-                        L2 = bullet.offsetLeft,
-                        U2 = bullet.offsetTop,
-                        R2 = bullet.offsetLeft + bullet.offsetWidth,
-                        B2 = bullet.offsetTop + bullet.offsetHeight;                                
+                        L2 = ele.offsetLeft,
+                        U2 = ele.offsetTop,
+                        R2 = ele.offsetLeft + ele.offsetWidth,
+                        B2 = ele.offsetTop + ele.offsetHeight;
 
                     if (R1 >= L2 && B1 >= U2 && L1 <= R2 && U1 <= B2) {
-                        enemy.remove();
-                        this.boom(enemy);
+                        if(enemy.classList.contains("big")) this.score += 500
+                        else this.score += 100 
+                        enemy.remove(); //子弹碰撞敌机后移除敌机
+                        this.boom(enemy); // 敌机爆炸后的图片
                     }
 
                 }.bind(this))
+                }else{
+                    let L1 = enemys.offsetLeft,
+                        U1 = enemys.offsetTop,
+                        R1 = enemys.offsetLeft + enemys.offsetWidth,
+                        B1 = enemys.offsetTop + enemys.offsetWidth,
 
+                        L2 = ele.offsetLeft,
+                        U2 = ele.offsetTop,
+                        R2 = ele.offsetLeft + ele.offsetWidth,
+                        B2 = ele.offsetTop + ele.offsetHeight;
+
+                    if (R1 >= L2 && B1 >= U2 && L1 <= R2 && U1 <= B2) { 
+                        clearInterval(createEnemyTimer)
+                        clearInterval(fireTimer)
+                        this.gameStart.remove();
+                        this.showGameOver();
+                    }
+                }
 
             },
-            boom(enemy){
+            boom(enemy) {
                 let boom = new Image();
-                    boom.src = './img/boom_small.png';
-                    boom.className = 'boom';
-                    boom.width = 60;
-                    boom.height = 60;
-                    boom.style.left = enemy.offsetLeft + 'px';
-                    boom.style.top = enemy.offsetTop + 'px';
-                    // console.log(enemy.offsetLeft)
-                    this.gameStart.appendChild(boom);                
-            },
-            checkCollision(enemys,bullet) {
-                // let flag = false;
-                [...enemys].forEach(function (item) {
-                    if(this.isCollision(item,bullet)){
-                        // bullet.remove()
-                        console.log(666)
-                        // return true;
-                    }
-                }.bind(this))
+                boom.src = './img/boom_small.png';
+                boom.className = 'boom';
+                boom.width = 60;
+                boom.height = 60;
+                boom.style.left = parseInt(enemy.style.left) + 'px';
+                boom.style.top = parseInt(enemy.style.top) + 'px';
+                this.gameStart.appendChild(boom);
+                setTimeout(function () {
+                    boom.remove();
+                }, 500)
             }
         }
 
