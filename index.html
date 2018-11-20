@@ -23,10 +23,17 @@
             list-style: none;
         }
 
+        h1 {
+            height: 50px;
+            padding-bottom: 100px;
+            line-height: 50px;
+        }
+
         #wrap {
             overflow: hidden;
             position: relative;
-            left: 30%;
+            left: 50%;
+            margin-left: -300px;
             width: 600px;
             height: 100%;
             background-image: url('./img/bg_1.jpg');
@@ -34,7 +41,6 @@
             background-size: 100% 100%;
         }
 
-        /* 游戏难度选择 */
         #gameSelect {
             position: absolute;
             top: 50%;
@@ -47,12 +53,6 @@
 
         #gameSelect>ul {
             margin-top: 100px;
-        }
-
-        h1 {
-            height: 50px;
-            padding-bottom: 100px;
-            line-height: 50px;
         }
 
         #gameSelect ul li {
@@ -76,7 +76,43 @@
             background-size: 100% 100%;
         }
 
-        /* 游戏结束 */
+        #gameStart {
+            position: absolute;
+            display: none;
+            width: 100%;
+            height: 100%;
+            cursor: none;
+        }
+
+        #myplane {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+
+        .bullet {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .enemy,
+        .boom {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #gameStart #scoreBox {
+            width: 200px;
+            height: 100px;
+            font-size: 25px;
+            text-align: center;
+            line-height: 100px;
+            color: red;
+        }
+
         #gameOver {
             display: none;
             position: absolute;
@@ -90,40 +126,10 @@
             line-height: 50px;
             padding-top: 100px;
             text-align: center;
-
         }
 
-        #score {
+        #overScore {
             color: #f00;
-        }
-
-        /* 游戏开始 */
-        #gameStart {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* 我方王思聪 */
-        #myplane {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 999;
-        }
-
-        .bullet {
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        /* 敌方飞机 */
-        .enemy,
-        .boom {
-            position: absolute;
-            top: 0;
-            left: 0;
         }
     </style>
 </head>
@@ -145,12 +151,14 @@
         </div>
         <!-- 开始游戏 -->
         <div id="gameStart">
-
+            <div id="scoreBox">
+                <h2>0</h2>
+            </div>
         </div>
         <!-- 游戏结束 -->
         <div id="gameOver">
             <p>游戏结束！</p>
-            您的积分是：<p id="score"></p>
+            您的积分是：<p id="overScore"></p>
         </div>
     </div>
 
@@ -159,209 +167,233 @@
 </body>
 
 <script>
-
     ; (function () {
-        [...document.querySelectorAll("#gameSelect li")].forEach(function (item, index) {
-            item.addEventListener('click', function (e) {
-                // index 表示点击的是哪个难度  
-                new Plane(e, index);
+        let wrapBox = document.getElementById("wrap"),
+            selectBox = document.getElementById("gameSelect"),
+            startBox = document.getElementById("gameStart"),
+            overBox = document.getElementById("gameOver"),
+            overScore = document.getElementById("overScore"),
+            score = 0,
+            num = 0,
+            timer1 = null,
+            timer2 = null;
 
-            }, false);
+        document.querySelectorAll("li").forEach(function (item, index) {
+            item.addEventListener("click", function (e) {
+
+                let time = [400, 300, 200, 100][index]; //敌机生成速度
+
+                new SelectBox().hide(selectBox); //隐藏选择难度界面
+
+                new StartBox().show(startBox);  // 显示游戏界面
+
+                let myplane = new MyPlane(e);  //生成我方飞机
+
+                timer1 = setInterval(function () {
+                    new Enemy();  //生成敌机
+                }, time);
+
+                timer2 = setInterval(function () {
+                    new Bullet(); //生成子弹
+                }, time);
+
+            })
         });
 
-
-        function Plane(e, index) {
-
-            this.init(e, index);
+        function MyPlane(e) {
+            this.createPlane(e); //创建我方飞机
+            this.move();  // 我方飞机移动
         }
-
-        Plane.prototype = {
-            init(e, index) {
-                this.wrap = document.getElementById("wrap"),
-                this.gameStart = document.getElementById("gameStart"),
-                this.gameSelect = document.getElementById("gameSelect"),
-                this.gameOver = document.getElementById('gameOver');
-                this.scoreBox = document.getElementById("score"),
-                this.myplane = document.getElementById('myplane');
-                this.enemyPlanes = document.getElementsByClassName("enemy")[0];
-                this.bullet = document.getElementsByClassName("bullet");
-                this.fireSpeed = [400, 300, 200, 100][index]; //开火速度
-                this.time = [400, 300, 200, 100][index]; //敌机生成速度
-                this.score = 0;
-                this.showGameBox(); //隐藏选择难度的界面，显示游戏开始界面
-                this.createMyPlane(e); // 创建我方王思聪
-                this.myPlaneMove(); // 我方王思聪移动
-                this.fire(this.fireSpeed); // 开火
-                this.createEnemyPlane(this.time);  // 创建敌方飞机并下落
+        MyPlane.prototype = {
+            createPlane(e) {
+                this.plane = new Image();
+                this.plane.id = 'myplane';
+                this.plane.src = './img/myplane.png';
+                this.plane.width = 70;
+                this.plane.height = 70;
+                this.plane.style.left = e.pageX - wrap.offsetLeft - (this.plane.width / 2) + 'px';
+                this.plane.style.top = e.pageY - wrap.offsetTop - (this.plane.height / 2) + 'px';
+                startBox.appendChild(this.plane)
             },
-            showGameBox() {
-                this.gameSelect.style.display = 'none';
-                this.gameStart.style.display = 'block';
-            },
-            showGameOver(){
-                this.scoreBox.innerText = this.score;
-                this.gameOver.style.display = 'block';
-            },
-            createMyPlane(e) {
-                this.myplane = new Image();
-                this.myplane.setAttribute('id', 'myplane');
-                this.myplane.src = './img/myplane.png';
-                this.myplane.width = 60;
-                this.myplane.height = 60;
-                this.myplane.style.left = e.x - (this.wrap.offsetLeft + this.myplane.width / 2) + 'px';
-                this.myplane.style.top = e.y - (this.myplane.height / 2) + 'px';
-                this.gameStart.appendChild(this.myplane);
-            },
-            myPlaneMove() {
-                let that = this;
-                window.onmousemove = function (e) {
-                    that.nowLeft = e.x - (that.wrap.offsetLeft + that.myplane.width / 2);
-                    that.nowTop = e.y - (that.myplane.height / 2);
-                    that.maxLeft = that.wrap.offsetWidth - that.myplane.width;
-                    that.minLeft = 0;
-                    that.maxTop = that.wrap.offsetHeight - that.myplane.offsetHeight;
-                    that.minTop = 0;
+            move() {
+                this.maxTop = 0;
+                this.maxBottom = document.documentElement.offsetHeight - this.plane.height;
+                this.maxLeft = 0;
+                this.maxRight = wrap.offsetWidth - this.plane.width;
+                document.addEventListener('mousemove', function (e) {
+                    this.nowLeft = e.pageX - wrap.offsetLeft - (this.plane.width / 2);
+                    this.nowTop = e.pageY - wrap.offsetTop - (this.plane.height / 2);
 
-                    if (that.nowLeft < that.minLeft) {
-                        that.nowLeft = that.minLeft
-                    }
-                    if (that.nowLeft > that.maxLeft) {
-                        that.nowLeft = that.maxLeft;
-                    }
-                    if (that.nowTop < that.minTop) {
-                        that.nowTop = that.minTop;
-                    }
-                    if (that.nowTop > that.maxTop) {
-                        that.nowTop = that.maxTop;
-                    }
-                    that.myplane.style.left = that.nowLeft + 'px';
-                    that.myplane.style.top = that.nowTop + 'px';
-                }.bind(this)
-            },
-            fire(speed) {
-               fireTimer =  setInterval(function () {
-                    let bullet = new Image();
-                    bullet.className = 'bullet';
-                    bullet.src = './img/hotDog.png';
-                    bullet.width = 60;
-                    bullet.height = 80;
-                    bullet.style.top = myplane.offsetTop - myplane.offsetHeight + "px";
-                    bullet.style.left = myplane.offsetLeft + "px";
-                    gameStart.appendChild(bullet);
+                    if (this.nowLeft < this.maxLeft) this.nowLeft = this.maxLeft;
+                    if (this.nowLeft > this.maxRight) this.nowLeft = this.maxRight
+                    if (this.nowTop < this.maxTop) this.nowTop = this.maxTop;
+                    if (this.nowTop > this.maxBottom) this.nowTop = this.maxBottom;
 
-                    function move() {
-                        let nowTop = bullet.offsetTop;
-                        nowTop -= 10;
-                        bullet.style.top = nowTop + 'px';
-
-                        // 碰撞检测
-                        this.isCollision(document.getElementsByClassName('enemy'), bullet)
-
-
-                        if (bullet.offsetTop <= -bullet.offsetHeight) { //子弹超过屏幕高度后移除
-                            bullet.remove();
-                        } else {
-                            requestAnimationFrame(move.bind(this));
-                        }
-
-                    }
-                    move.call(this);
-                }.bind(this), this.fireSpeed)
-            },
-            createEnemyPlane(speed) {
-                let num = 0;
-                createEnemyTimer  = setInterval(function () {
-                    let  smallOrBig = ++num % 5; 
-                    this.enemy = new Image(); 
-                    if(smallOrBig) this.enemy.classList.add("small");
-                    else  this.enemy.classList.add("big");
-                    this.enemy.classList.add('enemy');
-                    this.enemy.src = smallOrBig ?'./img/enemy_small.png':'./img/enemy_big.png';
-                    this.enemy.width = smallOrBig ? 60 : 200;
-                    this.enemy.height = smallOrBig ? 60 : 160;
-                    this.enemy.style.left = this.createRandom(-this.enemy.width / 2, this.wrap.offsetWidth - this.enemy.width / 2) + 'px';//敌机左右最大活动范围
-                    this.enemy.style.top = - 100 + 'px';
-                    this.gameStart.appendChild(this.enemy);
-                    this.speed = this.createRandom(2, 5); // 敌机随机下落速度
-                    this.enemyMove(this.enemy, this.speed);
-                }.bind(this), this.time);
-
-            },
-            enemyMove(enemy, speed) {
-                if(document.getElementById('myplane')){ //王思聪存在的话才调用检测碰撞
-                    this.isCollision(enemy,myplane); 
-                }
-                let nowTop = enemy.offsetTop;
-                nowTop += speed;
-                enemy.style.top = nowTop + 'px';
-                if (enemy.offsetTop > this.maxTop) {
-                    enemy.remove()
-                } else {
-                    requestAnimationFrame(this.enemyMove.bind(this, enemy, speed));
-                }
-            },            
-            createRandom(min, max) {
-                return Math.floor(Math.random() * (max - min + 1) + min);
-            },
-            isCollision(enemys, ele) {
-                if(enemys.length>0){
-                    [...enemys].forEach(function (enemy) {
-                    let L1 = enemy.offsetLeft,
-                        U1 = enemy.offsetTop,
-                        R1 = enemy.offsetLeft + enemy.offsetWidth,
-                        B1 = enemy.offsetTop + enemy.offsetWidth,
-
-                        L2 = ele.offsetLeft,
-                        U2 = ele.offsetTop,
-                        R2 = ele.offsetLeft + ele.offsetWidth,
-                        B2 = ele.offsetTop + ele.offsetHeight;
-
-                    if (R1 >= L2 && B1 >= U2 && L1 <= R2 && U1 <= B2) {
-                        if(enemy.classList.contains("big")) this.score += 500
-                        else this.score += 100 
-                        enemy.remove(); //子弹碰撞敌机后移除敌机
-                        this.boom(enemy); // 敌机爆炸后的图片
-                    }
+                    this.plane.style.left = this.nowLeft + 'px';
+                    this.plane.style.top = this.nowTop + 'px';
 
                 }.bind(this))
-                }else{
-                    let L1 = enemys.offsetLeft,
-                        U1 = enemys.offsetTop,
-                        R1 = enemys.offsetLeft + enemys.offsetWidth,
-                        B1 = enemys.offsetTop + enemys.offsetWidth,
-
-                        L2 = ele.offsetLeft,
-                        U2 = ele.offsetTop,
-                        R2 = ele.offsetLeft + ele.offsetWidth,
-                        B2 = ele.offsetTop + ele.offsetHeight;
-
-                    if (R1 >= L2 && B1 >= U2 && L1 <= R2 && U1 <= B2) { 
-                        clearInterval(createEnemyTimer)
-                        clearInterval(fireTimer)
-                        this.gameStart.remove();
-                        this.showGameOver();
-                    }
-                }
-
-            },
-            boom(enemy) {
-                let boom = new Image();
-                boom.src = './img/boom_small.png';
-                boom.className = 'boom';
-                boom.width = 60;
-                boom.height = 60;
-                boom.style.left = parseInt(enemy.style.left) + 'px';
-                boom.style.top = parseInt(enemy.style.top) + 'px';
-                this.gameStart.appendChild(boom);
-                setTimeout(function () {
-                    boom.remove();
-                }, 500)
             }
         }
 
+        function Enemy() {
+            this.speed = retRandom(3, 8); //敌机下落速度
+            this.createEnemy(); //生成敌机
+            this.move();  //敌机下落
+            this.nowTop = this.enemy.offsetTop; //敌机的top值
+        }
+        Enemy.prototype = {
+            createEnemy() {
+                let i = ++num;
+                this.enemy = document.createElement("img");
+                this.enemy.className = 'enemy';
+                this.enemy.classList.add(i % 5 ? 'small' : 'big');
+                this.enemy.src = i % 5 ? './img/enemy_small.png' : './img/enemy_big.png';
+                this.enemy.width = i % 5 ? 70 : 140;
+                this.enemy.height = i % 5 ? 70 : 140;
+                this.enemy.style.left = retRandom(-this.enemy.width / 2, wrap.offsetWidth - this.enemy.width / 2) + 'px';
+                this.enemy.style.top = (i % 5 ? -70 : -140) + 'px';
+                startBox.appendChild(this.enemy)
+            },
+            move() {
+                function fn() {
+                    this.nowTop = this.enemy.offsetTop;
+                    this.nowTop += this.speed;
+                    this.enemy.style.top = this.nowTop + 'px';
+                    if (this.nowTop < wrap.offsetHeight) {
+                        this.flag = requestAnimationFrame(fn.bind(this))
+                    } else {
+                        this.enemy.remove();
+                    }
+
+                    if (pz(this.enemy, document.getElementById("myplane"))) {
+                        cancelAnimationFrame(this.flag)
+                        clearInterval(timer1);
+                        clearInterval(timer2);
+                        new StartBox().hide(startBox);
+                        new OverBox().show(overBox, score);
+                    }
+                }
+                fn.call(this);
+            }
+
+        }
+
+        function Bullet() {
+            this.createBullet(); //创建子弹
+            this.fire(); //开火 
+            this.nowTop = this.bullet.offsetTop;
+        }
+        Bullet.prototype = {
+            createBullet() {
+                this.bullet = new Image();
+                this.bullet.className = 'bullet';
+                this.bullet.src = './img/hotDog.png';
+                this.bullet.width = 40;
+                this.bullet.height = 60;
+                this.bullet.style.left = myplane.offsetLeft + 'px';
+                this.bullet.style.top = myplane.offsetTop - this.bullet.height / 2 + 'px';
+                startBox.appendChild(this.bullet)
+            },
+            fire() {
+                function fn() {
+                    [...document.getElementsByClassName("enemy")].forEach(function (enemy) { // 子弹碰撞敌机
+
+                        if (pz(this.bullet, enemy)) {
+                            enemy.remove();
+                            new Boom(enemy); //生成爆炸图片
+                            this.bullet.remove();
+                            score += enemy.classList.contains("big") ? 500 : 100;
+                            document.getElementsByTagName("h2")[0].innerText = score;
+                        }
+                    }.bind(this))
+
+                    this.nowTop = this.bullet.offsetTop;
+                    this.nowTop -= 10;
+                    this.bullet.style.top = this.nowTop + 'px';
+
+
+                    if (this.nowTop > - this.bullet.offsetHeight) {
+                        requestAnimationFrame(fn.bind(this))
+                    } else {
+                        this.bullet.remove();
+                    }
+
+                }
+                fn.call(this);
+
+            }
+        }
+        function Boom(enemy) {
+            this.createBoom(enemy);//创建爆炸图片
+            this.hideBoom(); //1S后移除爆炸图片
+        }
+        Boom.prototype = {
+            createBoom(enemy) {
+                this.boom = new Image();
+                this.boom.className = 'boom';
+                this.boom.src = enemy.classList.contains("big") ? './img/boom_big.png' : './img/boom_small.png';
+                this.boom.width = this.boom.height = 64;
+                this.boom.style.left = parseInt(enemy.style.left) + 'px';
+                this.boom.style.top = parseInt(enemy.style.top) + 'px';
+                startBox.appendChild(this.boom);
+            },
+            hideBoom() {
+                setTimeout(function () {
+                    this.boom.remove();
+                }.bind(this), 1000)
+            }
+        }
+
+        function SelectBox(box) {
+        }
+        SelectBox.prototype = {
+            hide(box) {
+                box.style.display = 'none';
+            }
+        }
+        function StartBox() {
+        }
+        StartBox.prototype = {
+            show(box) {
+                box.style.display = 'block'
+            },
+            hide(box) {
+                box.style.display = 'none'
+            }
+        }
+        function OverBox() {
+        }
+        OverBox.prototype = {
+            show(box, score) {
+                box.style.display = 'block';
+                overScore.innerText = score;
+            }
+        }
+        function retRandom(min, max) {
+            return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+        function pz(ele1, ele2) {
+
+            var L1 = ele1.offsetLeft,
+                U1 = ele1.offsetTop,
+                R1 = ele1.offsetLeft + ele1.clientWidth,
+                B1 = ele1.offsetTop + ele1.clientWidth,
+
+                L2 = ele2.offsetLeft,
+                U2 = ele2.offsetTop,
+                R2 = ele2.offsetLeft + ele2.clientWidth,
+                B2 = ele2.offsetTop + ele2.clientHeight;
+
+            if (R1 >= L2 && B1 >= U2 && L1 <= R2 && U1 <= B2) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
     }())
 
 </script>
-
 
 </html>
